@@ -3,6 +3,7 @@ import os
 import time
 from functools import lru_cache
 
+from . import UncertainProgressBar
 from .backends.droplet import Droplet
 from .keyutil import get_fingerprint
 import digitalocean
@@ -39,19 +40,15 @@ def create_droplet():
 	droplet.create()
 	return Droplet(droplet)
 
-def print_now(*args, **kwargs):
-	import sys
-	print(*args, **kwargs)
-	sys.stdout.flush()
 
 def main():
-	print_now('Creating droplet...', end='')
-	droplet = create_droplet()
-	while not droplet.is_up():
-		print_now('.', end='')
-		time.sleep(2)
-	print_now()
-	print_now('Droplet created: {ip}'.format(ip=droplet.ip))
+	with UncertainProgressBar('Creating droplet...') as p:
+		droplet = create_droplet()
+		while not droplet.is_up():
+			p.tick()
+			time.sleep(2)
+	
+	print('Droplet created: {ip}'.format(ip=droplet.ip))
 
 if __name__ == '__main__':
 	main()
