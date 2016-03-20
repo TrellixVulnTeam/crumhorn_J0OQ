@@ -2,8 +2,9 @@
 import os
 import time
 from functools import lru_cache
-from droplet import Droplet
-from keyutil import get_fingerprint
+
+from .backends.droplet import Droplet
+from .keyutil import get_fingerprint
 import digitalocean
 
 def construct_cloudinit_userdata():
@@ -43,7 +44,7 @@ def print_now(*args, **kwargs):
 	print(*args, **kwargs)
 	sys.stdout.flush()
 
-if __name__ == '__main__':
+def main():
 	print_now('Creating droplet...', end='')
 	droplet = create_droplet()
 	while not droplet.is_up():
@@ -51,5 +52,8 @@ if __name__ == '__main__':
 		time.sleep(2)
 	print_now()
 	print_now('Droplet created: {ip}'.format(ip=droplet.ip))
+
+if __name__ == '__main__':
+	main()
 
 

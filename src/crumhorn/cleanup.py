@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 import os
 
-from droplet import Droplet
+from .backends.droplet import Droplet
 import digitalocean
 
 def find_all_droplets():
@@ -9,7 +9,9 @@ def find_all_droplets():
 	for d in manager.get_all_droplets():
 		yield Droplet(d)
 
-if __name__ == '__main__':
+def main():
 	for droplet in find_all_droplets():
 		droplet.delete()
 
+if __name__ == '__main__':
+	main()
