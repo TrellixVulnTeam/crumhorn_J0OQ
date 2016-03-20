@@ -11,9 +11,9 @@ Crumhorn aims to support the following:
 
 It aims to do so on the following platforms:
 * Digital Ocean
-** Launch environment = start vm
-** Provision new setup = start vm, configure, take a snapshot
-** Management = list / remove snapshots / running VMs
+  * Launch environment = start vm
+  * Provision new setup = start vm, configure, take a snapshot
+  * Management = list / remove snapshots / running VMs
 
 ## Installation
 
