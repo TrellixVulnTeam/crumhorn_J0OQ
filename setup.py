@@ -1,9 +1,9 @@
 #! /usr/bin/env python3
+# coding=utf-8
 from os import path
+
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
-import sys
-
 
 here = path.abspath(path.dirname(__file__))
 
@@ -15,6 +15,7 @@ with open(path.join(here, 'README.md')) as f:
 class UseToxError(TestCommand):
     def run_tests(self):
         raise RuntimeError('Run tests with tox')
+
 
 setup(
     name='crumhorn',
@@ -36,13 +37,16 @@ setup(
     install_requires=[
         'python-digitalocean>=1.8,<2',
     ],
+    tests_require=[
+        'pytest~=2.9'
+    ],
     setup_requires=[
     ],
     entry_points={
         'console_scripts': [
-    	    'prepare = crumhorn.prepare:main',
+            'prepare = crumhorn.prepare:main',
             'cleanup = crumhorn.cleanup:main',
         ]
     },
-    cmdclass = {'test': UseToxError}
+    cmdclass={'test': UseToxError}
 )
