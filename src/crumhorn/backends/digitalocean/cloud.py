@@ -33,6 +33,14 @@ class Cloud():
 
     def first_boot(self, machine_configuration, size_slug):
 
+        try:
+            existing_id = self.find_image_id(machine_configuration)
+            raise ValueError(
+                'Snapshot already exists for \'{name}\' - id is \'{id}\''.format(name=machine_configuration.name,
+                                                                                 id=existing_id))
+        except KeyError:
+            pass
+
         configuration = str(userdata.as_userdata_string(machine_configuration))
 
         droplet = digitalocean.Droplet(token=self.authentication_token,
@@ -48,6 +56,7 @@ class Cloud():
         return Droplet(self, droplet, machine_configuration)
 
     def launch(self, machine_configuration, size_slug):
+
         snapshot_id = self.find_image_id(machine_configuration)
 
         droplet = digitalocean.Droplet(token=self.authentication_token,
