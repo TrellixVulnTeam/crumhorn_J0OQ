@@ -36,7 +36,8 @@ setup(
     packages=find_packages(where='src'),
     install_requires=[
         'python-digitalocean>=1.8,<2',
-        'toml~=0.9'
+        'toml~=0.9',
+        'docopt~=0.6'
     ],
     tests_require=[
         'pytest~=2.9'

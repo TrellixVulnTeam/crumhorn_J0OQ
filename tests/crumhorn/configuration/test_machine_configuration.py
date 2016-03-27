@@ -8,6 +8,7 @@ import crumhorn.configuration.machineconfiguration as machineconiguration
 
 _here = os.path.dirname(__file__)
 _raw_configuration = path.abspath(os.path.join(_here, 'raw_configuration'))
+_raw_configuration_with_parent = path.abspath(os.path.join(_here, 'raw_configuration_with_parent'))
 
 
 def loading_as_package(folder_to_package):
@@ -69,6 +70,11 @@ def test_services_requiring_restart_dont_require_start():
     result = loading_as_package(_raw_configuration)
 
     assert not any([s.requires_start for s in result.services if s.name == 'sshd'])
+
+
+def test_parent_configuration_can_have_nested_files():
+    result = loading_as_package(_raw_configuration_with_parent)
+    assert len(result.base_image_configuration.files) > 0
 
 
 def first(gen):

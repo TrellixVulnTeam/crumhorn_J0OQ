@@ -1,4 +1,5 @@
 # coding=utf-8
+import fileinput
 import shutil
 
 import pytest
@@ -41,3 +42,26 @@ def test_hash_changes_when_content_changes(tmpdir):
     compile_folder(new_config_path.strpath, new_changed_output_path)
     new_changed = machineconfiguration.load_configuration(new_changed_output_path)
     assert original.config_hash != new_changed.config_hash
+
+
+def test_base_package_is_bundled(tmpdir):
+    child_package_source = tmpdir.join('child_package').strpath
+    shutil.copytree(_raw_configuration, child_package_source)
+    with fileinput.input(path.join(child_package_source, 'horn.toml'), inplace=True) as child_config:
+        for line in child_config:
+            if line.startswith('name'):
+                print('name = "childname"')
+            elif line.startswith('base_image'):
+                continue
+            else:
+                print(line)
+
+    parent_machine_spec = tmpdir.join('parent.crumspec').strpath
+    compile_folder(_raw_configuration, parent_machine_spec)
+
+    child_machine_spec = tmpdir.join('child.crumspec').strpath
+    compile_folder(child_package_source, child_machine_spec, base_package=parent_machine_spec)
+
+    result = machineconfiguration.load_configuration(child_machine_spec)
+    assert result.name == 'childname'
+    assert result.base_image_configuration.name == 'raw_configuration'

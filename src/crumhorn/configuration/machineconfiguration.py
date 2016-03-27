@@ -58,9 +58,12 @@ class ServiceConfig:
         return 'restart' not in self.flags
 
 
-def _file_to_copy_from_config(filespec, configuration_file):
+def _file_to_copy_from_config(filespec, configuration_file, path_prefix=''):
     return FileToCopy(
-        content=configuration_file.extractfile(filespec['local']).read(),
+        content=configuration_file.extractfile(
+            '{prefix}{localspec}'.format(
+                prefix=path_prefix,
+                localspec=filespec['local'])).read(),
         target_path=filespec['remote'],
         flags=(flag for flag in ('executable',) if filespec.get('executable', None)))
 
@@ -77,7 +80,7 @@ def _read_config(configuration_file, path_prefix):
         machine_files = []
         machine_files_config = horn_config[machine_configuration_name].get('files', [])
         for filespec in machine_files_config:
-            machine_files.append(_file_to_copy_from_config(filespec, configuration_file))
+            machine_files.append(_file_to_copy_from_config(filespec, configuration_file, path_prefix))
 
         machine_services = []
         machine_services_config = horn_config[machine_configuration_name].get('services', {})

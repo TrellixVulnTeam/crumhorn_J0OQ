@@ -1,0 +1,23 @@
+[horn]
+name = "raw_configuration"
+base_image = "fedora-23-x64"
+
+[raw_configuration]
+requires = [
+    "nftables"
+]
+raw_commands = [
+    "echo hello world"
+]
+
+[[raw_configuration.files]]
+local = "local_files/extra_configuration"
+remote = "/usr/bin/extra_runnable"
+executable = true
+
+[raw_configuration.services]
+firewalld = true
+
+
+[raw_configuration.services.sshd]
+restart = true
