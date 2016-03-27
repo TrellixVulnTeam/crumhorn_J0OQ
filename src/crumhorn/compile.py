@@ -21,7 +21,6 @@
 
 import base64
 import hashlib
-import os
 import re
 import sys
 import tarfile
@@ -29,32 +28,42 @@ from os import path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 
 import docopt
+import toml
 
 from crumhorn.configuration import machineconfiguration
 
 _missing_data_pattern = re.compile('filename \'(?P<filename>[^\']+)\' not found')
 
 
-class MissingDataFileError(RuntimeError):
+class MissingDataFileError(KeyError):
     pass
 
+
+def _files_from_configuration(config_dict):
+    return [f['local'] for f in config_dict.get(config_dict['horn'].get('name', {}), {}).get('files', [])]
 
 def compile_folder(source, output, base_package=None):
     source = path.abspath(source)
     output = path.abspath(output)
+
+    configuration = toml.load(path.join(source, 'horn.toml'))
+    # sort to ensure stable hashing for unchanged content
+    local_files = sorted(_files_from_configuration(configuration) + ['horn.toml'])
+
     with tarfile.open(output, mode='w:xz') as dest:
         lock_hash = hashlib.sha512()
-        for dirpath, dirs, files in os.walk(source, followlinks=True):
-            # these sorts ensure stable hashing for unchanged content
-            dirs[:] = sorted(dirs)
-            for f in sorted(files):
-                f_path = path.join(dirpath, f)
+
+        for f in local_files:
+            f_path = path.join(source, f)
+            try:
                 with open(f_path, 'rb') as opened:
                     lock_hash.update(opened.read())
+            except FileNotFoundError:
+                raise MissingDataFileError(f)
 
-                file_to_add = path.abspath(f_path)
-                dest_location = path.relpath(file_to_add, source)
-                dest.add(file_to_add, arcname=dest_location)
+            file_to_add = path.abspath(f_path)
+            dest_location = path.relpath(file_to_add, source)
+            dest.add(file_to_add, arcname=dest_location)
 
         if base_package is not None:
             with TemporaryDirectory() as tempdir:
@@ -71,13 +80,7 @@ def compile_folder(source, output, base_package=None):
             dest.add(lock_file.name, arcname='lock')
 
     # Check the resultant machinespec can load
-    try:
-        result = machineconfiguration.load_configuration(output)
-    except KeyError as e:
-        for a in e.args:
-            missing_file_match = _missing_data_pattern.search(a)
-            if missing_file_match:
-                raise MissingDataFileError(missing_file_match.group('filename'))
+    machineconfiguration.load_configuration(output)
 
 
 def main(argv=None):
@@ -89,7 +92,6 @@ def main(argv=None):
         dest = path.basename(source) + '.crumspec'
     base_package = options['--from']
     compile_folder(source, dest, base_package)
-
 
 
 if __name__ == '__main__':
