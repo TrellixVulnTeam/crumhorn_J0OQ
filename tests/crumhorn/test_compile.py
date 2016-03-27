@@ -6,10 +6,12 @@ import pytest
 
 from crumhorn.compile import *
 from crumhorn.configuration import machineconfiguration
+from crumhorn.configuration.environment import machinespec_repository
 
 _here = path.dirname(__file__)
 _raw_configuration = path.abspath(path.join(_here, 'configuration', 'raw_configuration'))
 _raw_configuration_missing_files = path.abspath(path.join(_here, 'configuration_with_missing_file'))
+_raw_configuration_unbundled_parent = path.abspath(path.join(_here, 'configuration_with_unbundled_parent'))
 
 
 def test_compilation_results_in_file_that_can_be_read_by_configuration_parser(tmpdir):
@@ -65,3 +67,15 @@ def test_base_package_is_bundled(tmpdir):
     result = machineconfiguration.load_configuration(child_machine_spec)
     assert result.name == 'childname'
     assert result.base_image_configuration.name == 'raw_configuration'
+
+
+def test_parent_package_is_looked_up_in_repository(tmpdir):
+    repository = machinespec_repository.MachineSpecRepository(environment={'repository.searchpath': tmpdir.strpath})
+    parent_file = tmpdir.join('raw_configuration.crumspec').strpath
+    compile_folder(source=_raw_configuration, output=parent_file)
+
+    child_file = tmpdir.join('child.crumspec').strpath
+    compile_folder(
+        source=_raw_configuration_unbundled_parent,
+        output=child_file,
+        machinespec_repository=repository)

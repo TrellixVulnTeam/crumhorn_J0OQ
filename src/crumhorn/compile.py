@@ -31,6 +31,7 @@ import docopt
 import toml
 
 from crumhorn.configuration import machineconfiguration
+from crumhorn.configuration.environment import environment
 
 _missing_data_pattern = re.compile('filename \'(?P<filename>[^\']+)\' not found')
 
@@ -42,13 +43,18 @@ class MissingDataFileError(KeyError):
 def _files_from_configuration(config_dict):
     return [f['local'] for f in config_dict.get(config_dict['horn'].get('name', {}), {}).get('files', [])]
 
-def compile_folder(source, output, base_package=None):
+
+def compile_folder(source, output, base_package=None, machinespec_repository=None):
     source = path.abspath(source)
     output = path.abspath(output)
 
     configuration = toml.load(path.join(source, 'horn.toml'))
     # sort to ensure stable hashing for unchanged content
     local_files = sorted(_files_from_configuration(configuration) + ['horn.toml'])
+    if base_package is None:
+        parent = configuration['horn'].get('parent', None)
+        if parent is not None:
+            base_package = machinespec_repository.find_machine_spec(parent)
 
     with tarfile.open(output, mode='w:xz') as dest:
         lock_hash = hashlib.sha512()
@@ -91,7 +97,8 @@ def main(argv=None):
     if not dest:
         dest = path.basename(source) + '.crumspec'
     base_package = options['--from']
-    compile_folder(source, dest, base_package)
+    compile_folder(source, dest, base_package,
+                   machinespec_repository=environment.build_environment().machinespec_repository)
 
 
 if __name__ == '__main__':

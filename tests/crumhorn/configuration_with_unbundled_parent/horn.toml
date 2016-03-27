@@ -1,0 +1,3 @@
+[horn]
+name = "configuration_with_parent"
+parent = "raw_configuration"

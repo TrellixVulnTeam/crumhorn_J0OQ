@@ -14,7 +14,6 @@
 
 """
 
-import os
 import sys
 import time
 
@@ -22,6 +21,7 @@ import docopt
 
 import crumhorn.configuration.machineconfiguration as machineconfiguration
 from crumhorn.backends.digitalocean import cloud
+from crumhorn.configuration.environment import environment
 from . import UncertainProgressBar
 
 
@@ -35,8 +35,8 @@ def main(argv=None):
     argv = argv if argv is not None else sys.argv[1:]
     options = docopt.docopt(__doc__, argv=argv)
     configuration = options['MACHINE_SPEC']
-
-    manager = cloud.initialize_cloud(os.environ)
+    env = environment.build_environment()
+    manager = cloud.initialize_cloud(env.cloud_config)
 
     with UncertainProgressBar('Creating droplet...') as p:
         droplet = create_droplet(manager, configuration)
