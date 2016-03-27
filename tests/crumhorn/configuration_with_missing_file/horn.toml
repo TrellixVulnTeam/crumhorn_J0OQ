@@ -1,0 +1,9 @@
+[horn]
+name = "raw_configuration"
+base_image = "fedora-23-x64"
+
+[raw_configuration]
+
+[[raw_configuration.files]]
+local = "extra_file"
+remote = "/usr/bin/extra_runnable"

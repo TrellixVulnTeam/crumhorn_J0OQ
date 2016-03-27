@@ -4,14 +4,14 @@ import os
 
 import digitalocean
 
+from crumhorn.backends.digitalocean.droplet import Droplet
 from . import UncertainProgressBar
-from .backends.droplet import Droplet
 
 
 def find_all_droplets():
     manager = digitalocean.Manager(token=os.environ['digitaloceantoken'])
     for d in manager.get_all_droplets():
-        yield Droplet(d)
+        yield Droplet(manager, d, None)
 
 
 def main():

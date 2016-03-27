@@ -36,6 +36,7 @@ setup(
     packages=find_packages(where='src'),
     install_requires=[
         'python-digitalocean>=1.8,<2',
+        'toml~=0.9'
     ],
     tests_require=[
         'pytest~=2.9'
@@ -46,6 +47,8 @@ setup(
         'console_scripts': [
             'prepare = crumhorn.prepare:main',
             'cleanup = crumhorn.cleanup:main',
+            'launch = crumhorn.launch:main',
+            'compile = crumhorn.compile:main'
         ]
     },
     cmdclass={'test': UseToxError}

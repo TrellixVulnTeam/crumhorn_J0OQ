@@ -1,57 +1,49 @@
 #! /usr/bin/env python3
 # coding=utf-8
 import os
+import sys
 import time
 
-import digitalocean
-
+import crumhorn.configuration.machineconfiguration as machineconfiguration
+from crumhorn.backends.digitalocean import cloud
 from . import UncertainProgressBar
-from .backends.droplet import Droplet
-from .keyutil import get_fingerprint
 
 
-def construct_cloudinit_userdata():
-    header = '#cloud-config'
-    with open('users.config', 'r') as f:
-        users_config = f.read()
-
-    with open('box.config', 'r') as f:
-        box_config = f.read()
-
-    return '\n'.join([header, users_config, box_config])
+def create_droplet(manager, config_path):
+    return manager.first_boot(
+        machine_configuration=machineconfiguration.load_configuration(config_path),
+        size_slug='512mb')
 
 
-with open(os.path.join(os.path.expanduser('~'), '.ssh', 'id_rsa.pub'), 'r') as f:
-    ssh_key_raw = f.readline()
-    ssh_key = get_fingerprint(ssh_key_raw)
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv[1:]
 
+    configuration = argv[0]
 
-def create_droplet():
-    user_data = construct_cloudinit_userdata()
-    with open('user-data', 'w') as f:
-        f.write(user_data)
+    manager = cloud.initialize_cloud(os.environ)
 
-    droplet = digitalocean.Droplet(token=os.environ['digitaloceantoken'],
-                                   name='example',
-                                   region='lon1',
-                                   image='fedora-23-x64',
-                                   size_slug='512mb',
-                                   backups=False,
-                                   ssh_keys=[ssh_key],
-                                   user_data=user_data)
-
-    droplet.create()
-    return Droplet(droplet)
-
-
-def main():
     with UncertainProgressBar('Creating droplet...') as p:
-        droplet = create_droplet()
+        droplet = create_droplet(manager, configuration)
         while not droplet.is_up():
             p.tick()
             time.sleep(2)
 
-    print('Droplet created: {ip}'.format(ip=droplet.ip))
+    with UncertainProgressBar('Awaiting power down...') as p:
+        while not droplet.is_powered_down():
+            p.tick()
+            time.sleep(2)
+
+    snapshot_name, action = droplet.snapshot()
+    with UncertainProgressBar('Taking droplet snapshot...') as p:
+        while not action.is_finished():
+            p.tick()
+            time.sleep(2)
+
+    with UncertainProgressBar('Tearing down base image...') as p:
+        droplet.delete()
+
+    print('Droplet preparation finished - snapshot saved as {}'.format(snapshot_name))
 
 
 if __name__ == '__main__':
