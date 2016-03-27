@@ -18,20 +18,20 @@
                                         then first boot will be from a snapshot of that package, rather than a raw image.
 
 """
-
+from __future__ import absolute_import
 import base64
 import hashlib
 import re
 import sys
 import tarfile
 from os import path
-from tempfile import NamedTemporaryFile, TemporaryDirectory
 
 import docopt
 import toml
 
 from crumhorn.configuration import machineconfiguration
 from crumhorn.configuration.environment import environment
+from crumhorn.platform.compatibility.tempfile import NamedTemporaryFile, TemporaryDirectory
 
 _missing_data_pattern = re.compile('filename \'(?P<filename>[^\']+)\' not found')
 
@@ -56,7 +56,7 @@ def compile_folder(source, output, base_package=None, machinespec_repository=Non
         if parent is not None:
             base_package = machinespec_repository.find_machine_spec(parent)
 
-    with tarfile.open(output, mode='w:xz') as dest:
+    with tarfile.open(output, mode='w:gz') as dest:
         lock_hash = hashlib.sha512()
 
         for f in local_files:
@@ -64,7 +64,7 @@ def compile_folder(source, output, base_package=None, machinespec_repository=Non
             try:
                 with open(f_path, 'rb') as opened:
                     lock_hash.update(opened.read())
-            except FileNotFoundError:
+            except IOError:
                 raise MissingDataFileError(f)
 
             file_to_add = path.abspath(f_path)
@@ -73,7 +73,7 @@ def compile_folder(source, output, base_package=None, machinespec_repository=Non
 
         if base_package is not None:
             with TemporaryDirectory() as tempdir:
-                with tarfile.open(base_package, mode='r:xz') as base:
+                with tarfile.open(base_package, mode='r:gz') as base:
                     base.extractall(path=tempdir)
                     with open(path.join(tempdir, 'horn.toml'), 'rb') as base_hash:
                         lock_hash.update(base_hash.read())

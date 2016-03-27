@@ -114,5 +114,5 @@ def _read_config(configuration_file, path_prefix):
 
 
 def load_configuration(path):
-    with tarfile.open(path, 'r:xz') as configuration_file:
+    with tarfile.open(path, 'r:gz') as configuration_file:
         return _read_config(configuration_file, '')

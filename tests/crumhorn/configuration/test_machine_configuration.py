@@ -14,7 +14,7 @@ _raw_configuration_with_parent = path.abspath(os.path.join(_here, 'raw_configura
 def loading_as_package(folder_to_package):
     with tempfile.NamedTemporaryFile(mode='w') as package_file:
         package_file.close()
-        with tarfile.open(name=package_file.name, mode='w:xz') as package:
+        with tarfile.open(name=package_file.name, mode='w:gz') as package:
             for dirpath, dirnames, fnames in os.walk(folder_to_package):
                 for f in fnames:
                     abspath = path.join(dirpath, f)

@@ -1,7 +1,8 @@
 # coding=utf-8
 import base64
-import gzip
 import itertools
+
+from crumhorn.platform.compatibility.gzip import compress
 
 
 def as_userdata_string(machine_configuration):
@@ -19,7 +20,7 @@ def _titled_list(list_name, items):
 def _file_as_byte_echo(file):
     return 'echo \'{encoded_content}\' | base64 -d | gzip -d > {target_file}' \
         .format(
-        encoded_content=base64.standard_b64encode(gzip.compress(file.content)).decode('utf-8'),
+        encoded_content=base64.standard_b64encode(compress(file.content)).decode('utf-8'),
         target_file=file.target_path)
 
 
@@ -32,7 +33,8 @@ def _as_userdata_parts(machine_configuration):
     except AttributeError:
         required_packages = []
 
-    yield from _titled_list('packages', required_packages)
+    for i in _titled_list('packages', required_packages):
+        yield i
 
     try:
         files_to_copy = machine_configuration.files
@@ -54,4 +56,5 @@ def _as_userdata_parts(machine_configuration):
                    ['systemctl start {name}'.format(name=s.name) for s in services if s.requires_start] + \
                    ['systemctl restart {name}'.format(name=s.name) for s in services if s.requires_restart]
 
-    yield from _titled_list('runcmd', itertools.chain(file_copy_commands, raw_cmds, service_cmds, ['shutdown +1']))
+    for i in _titled_list('runcmd', itertools.chain(file_copy_commands, raw_cmds, service_cmds, ['shutdown +1'])):
+        yield i

@@ -1,8 +1,8 @@
 # coding=utf-8
 import base64
-import gzip
 
 from crumhorn.configuration.userdata import as_userdata_string
+from crumhorn.platform.compatibility import gzip
 
 
 class SimpleFileForCopyingRemote():

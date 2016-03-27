@@ -1,5 +1,5 @@
 # coding=utf-8
-import fileinput
+from __future__ import absolute_import
 import shutil
 
 import pytest
@@ -7,6 +7,7 @@ import pytest
 from crumhorn.compile import *
 from crumhorn.configuration import machineconfiguration
 from crumhorn.configuration.environment import machinespec_repository
+from crumhorn.platform.compatibility import fileinput
 
 _here = path.dirname(__file__)
 _raw_configuration = path.abspath(path.join(_here, 'configuration', 'raw_configuration'))

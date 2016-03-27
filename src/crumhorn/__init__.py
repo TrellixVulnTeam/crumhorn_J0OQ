@@ -1,4 +1,5 @@
 # coding=utf-8
+from __future__ import print_function
 def _print_no_buffer(*args, **kwargs):
     import sys
     print(*args, **kwargs)
