@@ -24,6 +24,6 @@ Currently I do:
     virtualenv --python=python3 . 
     . bin/activate 
     pip install -U pip setuptools wheel 
-    pip install -E .
+    pip install -e .
 
 
