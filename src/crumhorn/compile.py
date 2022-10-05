@@ -74,7 +74,29 @@ def compile_folder(source, output, base_package=None, machinespec_repository=Non
         if base_package is not None:
             with TemporaryDirectory() as tempdir:
                 with tarfile.open(base_package, mode='r:gz') as base:
-                    base.extractall(path=tempdir)
+                    
+                    import os
+                    
+                    def is_within_directory(directory, target):
+                        
+                        abs_directory = os.path.abspath(directory)
+                        abs_target = os.path.abspath(target)
+                    
+                        prefix = os.path.commonprefix([abs_directory, abs_target])
+                        
+                        return prefix == abs_directory
+                    
+                    def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
+                    
+                        for member in tar.getmembers():
+                            member_path = os.path.join(path, member.name)
+                            if not is_within_directory(path, member_path):
+                                raise Exception("Attempted Path Traversal in Tar File")
+                    
+                        tar.extractall(path, members, numeric_owner=numeric_owner) 
+                        
+                    
+                    safe_extract(base, path=tempdir)
                     with open(path.join(tempdir, 'horn.toml'), 'rb') as base_hash:
                         lock_hash.update(base_hash.read())
                 dest.add(tempdir, arcname='base')
